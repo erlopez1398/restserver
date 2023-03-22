@@ -1,6 +1,10 @@
-const { response } =require('express');
+const { response, request}  = require('express');
+const bcryptjs = require('bcryptjs');
 
-const userGet = (req ,res = response) => {
+const Usuario = require('../models/user');
+const { validationResult } = require('express-validator');
+
+const userGet = (req, res = response) => {
 
     const query = req.query;
 
@@ -10,9 +14,9 @@ const userGet = (req ,res = response) => {
     });
 }
 
-const userPut = (req ,res = response) => {
+const userPut = (req=request, res = response) => {
 
-    const {id} = req.params;//desectructurado
+    const { id } = req.params;//desectructurado
 
     res.json({
         msg: 'put API - controlador',
@@ -20,26 +24,45 @@ const userPut = (req ,res = response) => {
     });
 }
 
-const userPost = (req ,res = response) => {
+const userPost = async (req, res = response) => {
+    const errors = validationResult(req);
+    if ( !errors.isEmpty() ) {
+        return res.status(400).json(errors);
+    }
+
+    const { nombre, correo, password, rol } = req.body;
+    const usuario = new Usuario({ nombre, correo, password, rol });
+    //const {nombre,edad} = req.body; parseo
+
+    //Verificar si el correo existe
+    const existeEmail = await Usuario.findOne({ correo});
+    if (existeEmail) {
+        return res.status(400).json({
+            msg: 'El correo ya está registrado'
+        });
+    }
+    //encriptar la contraseña
+    const salt = bcryptjs.genSaltSync();
+    usuario.password = bcryptjs.hashSync(password, salt);
     
-    const body = req.body;
-  //const {nombre,edad} = req.body; parseo
+
+    //Guardar en DB
+    await usuario.save();
 
     res.json({
-        msg: 'post API - controlador',
-        body
-       /*nombre,
-       edad */ //parseo
+        usuario
+        /*nombre,
+        edad */ //parseo
     });
 }
 
-const userDelete = (req ,res = response) => {
+const userDelete = (req, res = response) => {
     res.json({
         msg: 'delete API - controlador'
     });
 }
 
-const usersPatch = (req ,res = response) => {
+const usersPatch = (req, res = response) => {
     res.json({
         msg: 'patch API - controlador'
     });
@@ -47,7 +70,7 @@ const usersPatch = (req ,res = response) => {
 
 
 
-module.exports={
+module.exports = {
     userGet,
     userPut,
     userPost,
