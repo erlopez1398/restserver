@@ -13,42 +13,41 @@ const userGet = (req, res = response) => {
     });
 }
 
-const userPut = (req = request, res = response) => {
-
-    const { id } = req.params;//desectructurado
-
-    res.json({
-        msg: 'put API - controlador',
-        id
-    });
-}
-
 const userPost = async (req, res = response) => {
 
 
     const { nombre, correo, password, rol } = req.body;
     const usuario = new Usuario({ nombre, correo, password, rol });
-    //const {nombre,edad} = req.body; parseo
 
-   
     //encriptar la contraseña
     const salt = bcryptjs.genSaltSync();
     usuario.password = bcryptjs.hashSync(password, salt);
-
 
     //Guardar en DB
     await usuario.save();
 
     res.json({
         usuario
-        /*nombre,
-        edad */ //parseo
     });
 }
 
-const userDelete = (req, res = response) => {
+const userPut = async (req, res = response) => {
+
+    const { id } = req.params;//desectructurado
+    const { _id, password, google, correo, ...resto } = req.body;
+
+    //TODO validar contra base de datos
+    if (password) {
+        //encriptar la contraseña
+        const salt = bcryptjs.genSaltSync();
+        resto.password = bcryptjs.hashSync(password, salt);
+    }
+
+    const usuario = await Usuario.findByIdAndUpdate(id, resto);
+
     res.json({
-        msg: 'delete API - controlador'
+        msg: 'put API - controlador',
+        usuario
     });
 }
 
@@ -58,12 +57,16 @@ const usersPatch = (req, res = response) => {
     });
 }
 
-
+const userDelete = (req, res = response) => {
+    res.json({
+        msg: 'delete API - controlador'
+    });
+}
 
 module.exports = {
     userGet,
-    userPut,
     userPost,
-    userDelete,
-    usersPatch
+    userPut,
+    usersPatch,   
+    userDelete    
 }
