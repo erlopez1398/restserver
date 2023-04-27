@@ -1,20 +1,36 @@
 const { response, request } = require('express');
 const bcryptjs = require('bcryptjs');
 
+
 const Usuario = require('../models/user');
 
-const userGet = (req, res = response) => {
 
-    const query = req.query;
+
+const userGet = async (req, res = response) => {
+
+    const { limite = 5, desde = 0 } = req.query;
+    const query = { estado: true };
+
+    /*const usuarios = await Usuario.find(query)
+        .skip(Number(desde))
+        .limit(Number(limite));
+
+    const total = await Usuario.countDocuments(query);*/
+
+    const[total, usuarios] = await Promise.all([
+        Usuario.countDocuments(query),
+        Usuario.find(query)
+            .skip(Number(desde))
+            .limit(Number(limite))
+    ]);
 
     res.json({
-        msg: 'get API - controlador',
-        query
+        total,
+        usuarios
     });
 }
 
 const userPost = async (req, res = response) => {
-
 
     const { nombre, correo, password, rol } = req.body;
     const usuario = new Usuario({ nombre, correo, password, rol });
@@ -43,12 +59,9 @@ const userPut = async (req, res = response) => {
         resto.password = bcryptjs.hashSync(password, salt);
     }
 
-    const usuario = await Usuario.findByIdAndUpdate(id, resto);
+    const usuario = await Usuario.findByIdAndUpdate(id, resto, { new: true });
 
-    res.json({
-        msg: 'put API - controlador',
-        usuario
-    });
+    res.json(usuario);
 }
 
 const usersPatch = (req, res = response) => {
@@ -67,6 +80,6 @@ module.exports = {
     userGet,
     userPost,
     userPut,
-    usersPatch,   
-    userDelete    
+    usersPatch,
+    userDelete
 }
