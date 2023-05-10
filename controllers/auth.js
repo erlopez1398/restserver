@@ -15,14 +15,14 @@ const login = async (req, res = response) => {
 
         //verificar si el email existe
         const usuario = await Usuario.findOne({ correo });
-        if ( !usuario) {
+        if (!usuario) {
             return res.status(400).json({
                 msg: 'Usuario / password no son correctos - correo'
             });
         }
 
         //si el usuario esta activo
-        if ( !usuario.estado ) {
+        if (!usuario.estado) {
             return res.status(400).json({
                 msg: 'Usuario / password no son correctos - estado:false'
             });
@@ -52,6 +52,16 @@ const login = async (req, res = response) => {
     }
 }
 
+const googleSignIn = async (req, res = response) => {
+    const {id_token} = req.body;
+
+    res.json({
+        msg: 'ok',
+        id_token
+    });
+}
+
 module.exports = {
-    login
+    login,
+    googleSignIn
 }
